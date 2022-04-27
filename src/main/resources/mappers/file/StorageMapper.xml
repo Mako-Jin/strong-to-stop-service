@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smk.cpp.sts.business.file.dao.StorageDao">
+
+    <select id="getStorageByUserId" resultType="com.smk.cpp.sts.business.file.entity.StorageEntity">
+        select
+            storage_id as storageId,
+            user_id as userId,
+            used_storage_size as usedStorageSize,
+            total_storage_size as totalStorageSize
+        from
+            smk_tbl_storage
+        where user_id = #{userId} and is_delete = 2
+    </select>
+    
+</mapper>

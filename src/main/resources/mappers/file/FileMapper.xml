@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smk.cpp.sts.business.file.dao.FileMgrDao">
+
+    <select id="getFileByIdentifier" resultType="com.smk.cpp.sts.business.file.entity.FileEntity">
+        select file_id as fileId, file_name as fileName, identifier as identifier from smk_tbl_file
+        where identifier = #{identifier} and is_delete = 2
+    </select>
+
+    <insert id="createFile" parameterType="com.smk.cpp.sts.business.file.entity.FileEntity">
+        insert into smk_tbl_file
+        (
+            file_id,
+            file_name,
+            file_type,
+            file_size,
+            identifier,
+            is_delete,
+            progress,
+            create_time,
+            update_time,
+            create_user,
+            update_user
+        )
+        values
+        (
+            #{fileId},
+            #{filename},
+            #{fileType},
+            #{fileSize},
+            #{identifier},
+            #{isDelete},
+            #{progress},
+            #{createTime},
+            #{updateTime},
+            #{createUser},
+            #{updateUser}
+        )
+    </insert>
+
+    <select id="getFileByCatalogId" resultType="com.smk.cpp.sts.business.file.entity.FileEntity">
+        select
+            stf.file_id as fileId, stf.file_name as fileName
+        from
+            smk_tbl_file stf
+        left join smk_tbl_file_catalog stfc
+        on stfc.file_id = stf.file_id
+        where stfc.catalog_id = #{catalogId} and stf.is_delete = 2
+    </select>    
+    
+    <select id="getFileByFileId" resultType="com.smk.cpp.sts.business.file.entity.FileEntity">
+        select
+            file_id as fileId, file_name as fileName, file_size as fileSize, progress as progress
+        from
+            smk_tbl_file
+        where file_id = #{fileId} and is_delete = 2
+    </select>
+    
+    <update id="updateFileInfoByFileId" parameterType="com.smk.cpp.sts.business.file.entity.FileEntity">
+        update smk_tbl_file
+        <trim prefix="set" suffixOverrides=",">
+            <if test="originalFilename != null"> original_filename = #{originalFilename}, </if>
+            <if test="relativePath != null"> relative_path = #{relativePath}, </if>
+            <if test="fileType != null"> file_type = #{fileType}, </if>
+            <if test="parentId != null"> parent_id = #{parentId}, </if>
+            <if test="updateTime != null"> update_time = #{updateTime}, </if>
+            <if test="updateUser != null"> update_user = #{updateUser}, </if>
+        </trim>
+        WHERE file_id = #{fileId}
+    </update>
+    
+    <update id="updateProgress">
+        update smk_tbl_file set progress = #{progress} WHERE file_id = #{fileId}
+    </update>
+    
+    <select id="getUnCompleteFileList" resultType="com.smk.cpp.sts.business.file.vo.FileStatusVo">
+        select 
+            catalog_id as catalogId,
+            original_filename as originalFilename,
+            stf.file_size as fileSize,
+            stf.progress as progress
+        from 
+            smk_tbl_file stf
+        left join smk_tbl_file_catalog stfc
+        on stf.file_id = stfc.file_id
+        where stf.create_user = #{currentUser} 
+          and stf.progress != 100
+          and stf.is_delete = 2
+    </select>
+    
+    <delete id="deleteFileByFileId">
+        delete from smk_tbl_file where file_id = #{fileId}
+    </delete>
+    
+</mapper>

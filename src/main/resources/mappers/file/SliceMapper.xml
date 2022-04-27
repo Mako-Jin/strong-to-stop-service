@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smk.cpp.sts.business.file.dao.SliceDao">
+
+    <select id="getSliceByFileId" resultType="com.smk.cpp.sts.business.file.entity.SliceEntity">
+        select
+            slice_id as sliceId,
+            status as status,
+            file_id as fileId
+        from
+            smk_tbl_file_slice
+        where file_id = #{fileId}
+        <if test="status != null">
+            and status = #{status}
+        </if>
+    </select>
+
+    <insert id="batchSaveSlice" parameterType="com.smk.cpp.sts.business.file.entity.SliceEntity">
+        insert into smk_tbl_file_slice
+            (
+                slice_id, status, file_id, chunk_number, 
+                create_user, create_time, update_user, update_time
+            )
+        values 
+        <foreach collection="sliceList" separator="," item="sliceEntity">
+            (#{sliceEntity.sliceId}, 
+            #{sliceEntity.status}, 
+            #{sliceEntity.fileId},
+            #{sliceEntity.chunkNumber},
+            #{sliceEntity.createUser}, 
+            #{sliceEntity.createTime}, 
+            #{sliceEntity.updateUser}, 
+            #{sliceEntity.updateTime})
+        </foreach>
+    </insert>
+    
+    <update id="updateSlice">
+        update smk_tbl_file_slice
+        <trim prefix="set" suffixOverrides=",">
+            <if test="status != null"> status = #{status}, </if>
+            <if test="identifier != null"> identifier = #{identifier}, </if>
+            <if test="chunkSize != null"> chunk_size = #{chunkSize}, </if>
+            <if test="updateUser != null"> update_user = #{updateUser}, </if>
+            <if test="updateTime != null"> update_time = #{updateTime}, </if>
+        </trim>
+        WHERE file_id = #{fileId} and chunk_number = #{chunkNumber}
+    </update>
+    
+    <delete id="deleteSliceByFileId">
+        delete from smk_tbl_file_slice where file_id = #{fileId}
+    </delete>
+    
+</mapper>

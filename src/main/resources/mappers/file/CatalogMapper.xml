@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smk.cpp.sts.business.file.dao.CatalogMgrDao">
+    
+    <select id="getCatalogListByParentId" resultType="com.smk.cpp.sts.business.file.entity.CatalogEntity">
+        select
+            stfc.catalog_id as catalogId,
+            stfc.original_filename as originalFilename,
+            stfc.is_directory as isDirectory,
+            stfc.file_size as fileSize,
+            stfc.file_type as fileType,
+            stfc.parent_id as parentId,
+            stfc.update_time as updateTime,
+            stsu.nick_name as updateUser
+        from
+            smk_tbl_file_catalog stfc
+        left join
+            smk_tbl_sys_user stsu
+        on
+            stfc.update_user = stsu.user_id
+        where 1=1 
+            and is_delete = 2 
+            and stfc.parent_id = #{catalog.parentId} 
+            and stfc.create_user = #{catalog.createUser}
+        order by is_directory
+    </select>
+
+    <insert id="createCatalog" parameterType="com.smk.cpp.sts.business.file.entity.CatalogEntity">
+        insert into smk_tbl_file_catalog
+        (
+            catalog_id,
+            file_id,
+            original_filename,
+            relative_path,
+            file_type,
+            file_size,
+            parent_id,
+            is_delete,
+            is_directory,
+            create_time,
+            update_time,
+            create_user,
+            update_user
+        )
+        values
+        (
+            #{catalogId},
+            #{fileId},
+            #{originalFilename},
+            #{relativePath},
+            #{fileType},
+            #{fileSize},
+            #{parentId},
+            #{isDelete},
+            #{isDirectory},
+            #{createTime},
+            #{updateTime},
+            #{createUser},
+            #{updateUser}
+        )
+    </insert>
+
+    <select id="getFileCountByOriginalFileName" resultType="java.lang.Integer">
+        select count(1) from smk_tbl_file_catalog
+        where parent_id = #{parentId} and is_delete = 2
+        <if test="catalogId != null">
+            and catalog_id != #{catalogId}
+        </if>
+          and original_filename ~* 
+        ('^(' || trim(#{originalFilename}) || '$|' || trim(#{originalFilename}) || '\s[(][1-9][0-9]*[)])')
+    </select>
+
+    <update id="updateCatalogInfoByCatalogId" parameterType="com.smk.cpp.sts.business.file.entity.CatalogEntity">
+        update smk_tbl_file_catalog
+        <trim prefix="set" suffixOverrides=",">
+            <if test="originalFilename != null"> original_filename = #{originalFilename},</if>
+            <if test="relativePath != null"> relative_path = #{relativePath}, </if>
+            <if test="fileType != null"> file_type = #{fileType}, </if>
+            <if test="parentId != null"> parent_id = #{parentId}, </if>
+            <if test="updateTime != null"> update_time = #{updateTime}, </if>
+            <if test="updateUser != null"> update_user = #{updateUser}, </if>
+        </trim>
+        WHERE catalog_id = #{catalogId}
+    </update>
+
+    <select id="getAllCatalog" resultType="com.smk.cpp.sts.business.file.entity.CatalogEntity">
+        select
+            catalog_id as catalogId,
+            parent_id as parentId
+        from
+            smk_tbl_file_catalog
+        where create_user = #{currentUser}
+    </select>
+
+    <update id="batchDeleteByCateLogIds">
+        update smk_tbl_file_catalog set
+        is_delete = 1, update_time = now(), update_user = #{currentUserId}
+        WHERE catalog_id in
+        <foreach collection="catalogIds" item="catalogId" separator="," open="(" close=")">
+            #{catalogId}
+        </foreach>
+    </update>
+    
+    <select id="getCatalogByParentIdAndFileId" resultType="com.smk.cpp.sts.business.file.entity.CatalogEntity">
+        select catalog_id as catalogId from smk_tbl_file_catalog
+        where file_id = #{fileId} and parent_id = #{parentId}
+    </select>
+
+    <select id="getCatalogByCatalogId" resultType="com.smk.cpp.sts.business.file.entity.CatalogEntity">
+        select 
+            catalog_id as catalogId, 
+            file_id as fileId, 
+            original_filename as originalFilename,
+            relative_path as relativePath 
+        from 
+            smk_tbl_file_catalog
+        where catalog_id = #{catalogId} and is_delete = 2
+    </select>
+    
+    <select id="getCountByFileId">
+        select count(catalog_id) from smk_tbl_file_catalog where file_id = #{fileId}
+    </select>
+    
+</mapper>

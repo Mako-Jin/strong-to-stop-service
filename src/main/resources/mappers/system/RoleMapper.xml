@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smk.cpp.sts.business.system.dao.RoleDao">
+
+    <resultMap id="BaseResultMap" type="com.smk.cpp.sts.business.system.entity.RoleEntity" >
+        <id column="role_id" property="roleId" jdbcType="VARCHAR" />
+        <result column="role_name" property="roleName" jdbcType="VARCHAR" />
+        <result column="role_desc" property="roleDesc" jdbcType="VARCHAR" />
+    </resultMap>
+
+    <select id="getRoleByUserId" resultType="com.smk.cpp.sts.base.model.AuthorityModel">
+        select 
+            r.role_id as roleId, 
+            r.role_name as roleName, 
+            r.is_need_authorized as isNeedAuthorized
+        from
+            smk_tbl_sys_role r
+        left join smk_tbl_rela_role_user ru
+        on r.role_id = ru.role_id
+        where user_id = #{userId}
+    </select>
+    
+    <select id="getRoleListByMenuUrl" resultType="com.smk.cpp.sts.base.model.AuthorityModel">
+        SELECT distinct
+            sr.role_id as roleId,
+            sr.role_name as roleName,
+            sr.is_need_authorized as isNeedAuthorized
+        FROM
+            smk_tbl_sys_role sr
+        left join smk_tbl_rela_role_menu rrm on rrm.role_id = sr.role_id
+        left join smk_tbl_sys_menu sm on rrm.menu_id = sm.menu_id
+        where
+            #{menuUrl} ~ menu_url;
+    </select>
+
+    <select id="getRoleListByMenuId" resultType="com.smk.cpp.sts.base.model.AuthorityModel">
+        SELECT distinct
+            sr.role_id as roleId,
+            sr.role_name as roleName,
+            sr.is_need_authorized as isNeedAuthorized
+        FROM
+            smk_tbl_sys_role sr
+            left join smk_tbl_rela_role_menu rrm on rrm.role_id = sr.role_id
+        where
+            menu_id = #{menuId};
+    </select>
+
+    <select id="getRoleListByMenuIdList" resultType="com.smk.cpp.sts.base.model.AuthorityModel">
+        SELECT distinct
+            sr.role_id as roleId,
+            sr.role_name as roleName,
+            sr.is_need_authorized as isNeedAuthorized
+        FROM
+            smk_tbl_sys_role sr
+                left join smk_tbl_rela_role_menu rrm on rrm.role_id = sr.role_id
+        where
+            menu_id in 
+            <foreach collection="menuIds" item="menuId" open="(" close=")" separator=",">
+                #{menuId}
+            </foreach>
+    </select>
+
+    <select id="getRoleTotalCount" resultType="java.lang.Integer">
+        SELECT
+            count(1)
+        FROM
+            smk_tbl_sys_role
+        where 1=1
+        <if test="role.roleName != null and role.roleName != ''">
+            and role_name like '%' || #{role.roleName} || '%'
+        </if>
+    </select>
+
+    <select id="getRolePageList" resultType="com.smk.cpp.sts.business.system.entity.RoleEntity">
+        SELECT
+            stsr.role_id as roleId,
+            stsr.role_name as roleName,
+            stsr.role_desc as roleDesc,
+            stsr.role_status as roleStatus,
+            stsr.is_need_authorized as isNeedAuthorized,
+            stsr.create_time as createTime,
+            stsu1.nick_name as createUser,
+            stsr.update_time as updateTime,
+            stsu2.nick_name as updateUser
+        FROM
+            smk_tbl_sys_role stsr
+        left join
+            smk_tbl_sys_user stsu1
+        on
+            stsr.create_user = stsu1.user_id
+        left join
+            smk_tbl_sys_user stsu2
+        on
+            stsr.update_user = stsu2.user_id
+        where 1=1
+        <if test="role.roleName != null and role.roleName != ''">
+            and role_name like '%' || #{role.roleName} || '%'
+        </if>
+            limit #{offset} offset #{startIndex}
+    </select>
+    
+    <insert id="saveRole" parameterType="com.smk.cpp.sts.business.system.entity.RoleEntity">
+        insert into smk_tbl_sys_role
+        (
+            role_id,
+            role_name,
+            role_desc,
+            is_secret,
+            is_need_authorized,
+            role_status,
+            create_time,
+            update_time,
+            create_user,
+            update_user
+        )
+        values
+        (
+            #{roleId},
+            #{roleName},
+            #{roleDesc},
+            #{isSecret},
+            #{isNeedAuthorized},
+            #{roleStatus},
+            #{createTime},
+            #{updateTime},
+            #{createUser},
+            #{updateUser}
+        )
+    </insert>
+    
+    <update id="updateRoleByRoleId" parameterType="com.smk.cpp.sts.business.system.entity.RoleEntity">
+        update smk_tbl_sys_role
+        <trim prefix="set" suffixOverrides=",">
+            <if test="roleName != null"> role_name = #{roleName}, </if>
+            <if test="roleDesc != null"> role_desc = #{roleDesc}, </if>
+            <if test="isNeedAuthorized != null"> is_need_authorized = #{isNeedAuthorized}, </if>
+            <if test="isSecret != null"> is_secret = #{isSecret}, </if>
+            <if test="roleStatus != null"> role_status = #{roleStatus}, </if>
+            <if test="updateTime != null"> update_time = #{updateTime}, </if>
+            <if test="updateUser != null"> update_user = #{updateUser}, </if>
+        </trim>
+        WHERE role_id = #{roleId}
+    </update>
+    
+    <delete id="deleteRoleByRoleId">
+        delete from smk_tbl_sys_role where role_id = #{roleId};
+    </delete>
+    
+    <delete id="deleteRelationRoleMenuByRoleId">
+        delete from smk_tbl_rela_role_menu where role_id = #{roleId};
+    </delete>
+
+    <delete id="deleteRelationRoleMenu">
+        delete from smk_tbl_rela_role_menu where role_id = #{roleId} and menu_id in
+        <foreach collection="menuIds" item="menuId" separator="," open="(" close=")">
+            #{menuId}
+        </foreach>
+    </delete>
+    
+    <delete id="deleteRelationRoleUserByRoleId">
+        delete from smk_tbl_rela_role_user where role_id = #{roleId};
+    </delete>
+    
+    <insert id="saveRelationRoleMenu">
+        insert into smk_tbl_rela_role_menu
+            (
+                role_id,
+                menu_id,
+                create_time,
+                update_time,
+                create_user,
+                update_user
+            )
+        values 
+        <foreach collection="menuIds" item="menuId" separator=",">
+            (
+                #{roleId},
+                #{menuId},
+                now(),
+                now(),
+                #{userId},
+                #{userId}
+            )
+        </foreach>
+    </insert>
+    
+    <select id="getRoleByRoleId" resultType="com.smk.cpp.sts.business.system.entity.RoleEntity">
+        select
+            role_id as roleId,
+            role_name as roleName,
+            role_desc as roleDesc,
+            role_status as roleStatus,
+            is_need_authorized as isNeedAuthorized
+        from smk_tbl_sys_role
+        where role_id = #{roleId}
+    </select>
+</mapper>

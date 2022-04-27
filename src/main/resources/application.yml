@@ -1,0 +1,47 @@
+server:
+  port: 36800
+  servlet:
+    context-path: /sts-admin
+
+spring:
+  application:
+    name: sts-admin
+  profiles:
+    active: local 
+  messages:
+    basename: i18n/sts
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 10MB
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:postgresql://localhost:5432/strong-to-stop?serverTimezone=Asia/Shanghai&characterEncoding=utf8
+    username: postgres
+    password: 515322
+
+mybatis:
+  mapper-locations: classpath*:mappers/**/*.xml
+  
+sts:
+  auth:
+    param:
+      username-password:
+        token-class-name: com.smk.cpp.sts.core.security.token.DefaultToken
+        username-parameter: username
+        password-parameter: password
+      username-password-image-code:
+        token-class-name: com.smk.cpp.sts.core.security.token.DefaultToken
+        username-parameter: username
+        password-parameter: password
+        has-image-code: true
+        image-code-parameter: image-verification-code
+      phone-code:
+        token-class-name: com.smk.cpp.sts.core.security.token.SmsCodeToken
+        username-parameter: phone-number
+        password-parameter: security-code
+
+logging:
+  level:
+    org.springframework.security: debug

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smk.cpp.sts.business.system.dao.MenuDao">
+
+    <select id="getSystemWhiteList" resultType="java.lang.String">
+        select 
+            menu_id
+        from
+            smk_tbl_rela_role_menu strrm
+        left join 
+            smk_tbl_sys_role stsr
+        on strrm.role_id = stsr.role_id
+        where stsr.is_secret = 2 and stsr.is_need_authorized = 2
+    </select>
+    
+    <select id="getAuthorizedMenuList" resultType="com.smk.cpp.sts.business.system.entity.MenuEntity">
+        select 
+            menu_id as menuId,
+            menu_url as menuUrl
+        from
+            smk_tbl_sys_menu
+        where menu_status = 1
+    </select>
+
+    <select id="getAllMenuList" resultType="com.smk.cpp.sts.business.system.entity.MenuEntity">
+        select
+            menu_id as menuId,
+            menu_url as menuUrl,
+            menu_desc as menuDesc,
+            is_secret as isSecret,
+            sort as sort,
+            create_time as createTime,
+            menu_name as menuName,
+            menu_status as menuStatus,
+            parent_id as parentId,
+            menu_level as menuLevel
+        from
+            smk_tbl_sys_menu
+        where 1=1
+        <if test="menuId != null">
+            and menu_id = #{menuId} 
+        </if>
+        order by sort
+    </select>
+    
+    <insert id="saveMenu" parameterType="com.smk.cpp.sts.business.system.entity.MenuEntity">
+        insert into smk_tbl_sys_menu
+            (
+                menu_id,
+                menu_name,
+                menu_url,
+                menu_desc,
+                sort,
+                is_secret,
+                menu_type,
+                menu_status,
+                menu_level,
+                parent_id,
+                create_time,
+                update_time,
+                create_user,
+                update_user
+            )
+        values 
+            (
+                #{menuId},
+                #{menuName},
+                #{menuUrl},
+                #{menuDesc},
+                #{sort},
+                #{isSecret},
+                #{menuType},
+                #{menuStatus},
+                #{menuLevel},
+                #{parentId},
+                #{createTime},
+                #{updateTime},
+                #{createUser},
+                #{updateUser}
+            )
+    </insert>
+    
+    <update id="updateMenuByMenuId" parameterType="com.smk.cpp.sts.business.system.entity.MenuEntity">
+        update smk_tbl_sys_menu
+        <trim prefix="set" suffixOverrides=",">
+            <if test="menuName != null"> menu_name = #{menuName}, </if>
+            <if test="menuUrl != null"> menu_url = #{menuUrl}, </if>
+            <if test="menuDesc != null"> menu_desc = #{menuDesc}, </if>
+            <if test="sort != null"> sort = #{sort}, </if>
+            <if test="isSecret != null"> is_secret = #{isSecret}, </if>
+            <if test="menuType != null"> menu_type = #{menuType}, </if>
+            <if test="menuStatus != null"> menu_status = #{menuStatus}, </if>
+            <if test="menuLevel != null"> menu_level = #{menuLevel}, </if>
+            <if test="parentId != null"> parent_id = #{parentId}, </if>
+            <if test="updateTime != null"> update_time = #{updateTime}, </if>
+            <if test="updateUser != null"> update_user = #{updateUser}, </if>
+        </trim>
+        WHERE menu_id = #{menuId}
+    </update>
+
+    <delete id="batchDelete" parameterType="java.lang.String">
+        delete from smk_tbl_sys_menu where menu_id in 
+        <foreach collection="menuIds" open="(" close=")" separator="," item="menuId">
+            #{menuId}
+        </foreach>
+        delete from smk_tbl_rela_role_menu where menu_id in
+        <foreach collection="menuIds" open="(" close=")" separator="," item="menuId">
+            #{menuId}
+        </foreach>
+    </delete>
+
+    <delete id="batchDeleteRelationRoleMenu" parameterType="java.lang.String">
+        delete from smk_tbl_rela_role_menu where menu_id in
+        <foreach collection="menuIds" open="(" close=")" separator="," item="menuId">
+            #{menuId}
+        </foreach>
+    </delete>
+    
+    <select id="getMenuByUrl" resultType="com.smk.cpp.sts.business.system.entity.MenuEntity">
+        select
+            menu_id as menuId,
+            menu_url as menuUrl
+        from
+            smk_tbl_sys_menu
+        where menu_status = 1 and menu_url = #{menuUrl}
+    </select>
+    
+    <select id="getMenuListByParentId" 
+            resultType="com.smk.cpp.sts.business.system.entity.MenuEntity">
+        select 
+            menu_id as menuId,
+            menu_name as menuName,
+            parent_id as parentId,
+            menu_type as menuType
+        from smk_tbl_sys_menu
+        where parent_id = #{parentId} order by sort
+    </select>
+    
+    <select id="getMaxSortByParentId" resultType="java.lang.Integer">
+        select max(sort) from smk_tbl_sys_menu where parent_id = #{parentId}
+    </select>
+
+    <select id="getMenuIdsByRoleId" resultType="java.lang.String">
+        select menu_id from smk_tbl_rela_role_menu where role_id = #{roleId}
+    </select>
+</mapper>

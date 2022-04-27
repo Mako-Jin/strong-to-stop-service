@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smk.cpp.sts.business.system.dao.UserDao">
+
+    <select id="getUserByUserName" resultType="com.smk.cpp.sts.business.system.entity.UserEntity">
+        select
+            user_id as userId, user_name as userName, user_pwd as userPwd
+        from
+            smk_tbl_sys_user
+        where 1=1
+        <if test="username != null and username != '' ">
+            and user_name = #{username}
+        </if>
+    </select>
+
+    <select id="getUserTotalCount" resultType="java.lang.Integer">
+        select
+            count(user_id)
+        from
+            smk_tbl_sys_user
+        where 1=1
+        <if test="user.username != null and user.username != '' ">
+            and user_name = #{user.username}
+        </if>
+        <if test="user.phoneNum != null and user.phoneNum != '' ">
+            and phone_num = #{user.phoneNum}
+        </if>
+    </select>
+
+    <select id="getUserPageList" resultType="com.smk.cpp.sts.business.system.vo.UserVo">
+        select
+            stsu1.user_id as userId, 
+            stsu1.user_name as username,
+            stsu1.nick_name as nickName,
+            stsu1.phone_num as phoneNum,
+            stsu1.email_address as emailAddress,
+            stsu1.avatar as avatar,
+            stsu2.nick_name as createUser,
+            stsu1.create_time as createTime,
+            stsu2.nick_name as updateUser,
+            stsu1.update_time as updateTime
+        from
+            smk_tbl_sys_user stsu1
+        left join
+            smk_tbl_sys_user stsu2
+        on
+            stsu1.update_user = stsu2.user_id
+        where 1=1
+        <if test="user.username != null and user.username != '' ">
+            and stsu1.user_name = #{user.username}
+        </if>
+        <if test="user.phoneNum != null and user.phoneNum != '' ">
+            and stsu1.phone_num = #{user.phoneNum}
+        </if>
+        limit #{offset} offset #{startIndex}
+    </select>
+    
+    <select id="getUserInfoByUserId" resultType="com.smk.cpp.sts.base.model.UserInfoModel">
+        select 
+            user_id as userId,
+            user_name as username,
+            nick_name as nickName,
+            avatar as avatar,
+            phone_num as phoneNum,
+            email_address as emailAddress
+        from
+            smk_tbl_sys_user
+        where
+            user_id = #{user_id}
+    </select>
+    
+    <delete id="deleteUserByUserId">
+        delete from smk_tbl_sys_user where user_id = #{userId};
+    </delete>
+
+    <delete id="deleteRelationRoleUserByUserId">
+        delete from smk_tbl_rela_role_user where user_id = #{userId};
+    </delete>
+    
+    <insert id="saveUser" 
+            parameterType="com.smk.cpp.sts.business.system.entity.UserEntity">
+        insert into smk_tbl_sys_user 
+            (
+                "user_id", 
+                "user_name",
+                "user_pwd",
+                "nick_name",
+                "phone_num",
+                "email_address",
+                "avatar",
+                "create_time", 
+                "update_time", 
+                "create_user", 
+                "update_user"
+            )
+        VALUES 
+            (
+                #{userId},
+                #{username},
+                #{userPwd},
+                #{nickName},
+                #{phoneNum},
+                #{emailAddress},
+                #{avatar},
+                #{createTime},
+                #{updateTime},
+                #{createUser},
+                #{updateUser}
+            )
+    </insert>
+
+    <update id="updateUserByUserId"
+            parameterType="com.smk.cpp.sts.business.system.entity.UserEntity">
+        update smk_tbl_sys_user
+        <trim prefix="set" suffixOverrides=",">
+            <if test="username != null"> user_name = #{username}, </if>
+            <if test="nickName != null"> nick_name = #{nickName}, </if>
+            <if test="phoneNum != null"> phone_num = #{phoneNum}, </if>
+            <if test="emailAddress != null"> email_address = #{emailAddress}, </if>
+            <if test="avatar != null"> avatar = #{avatar}, </if>
+            <if test="updateTime != null"> update_time = #{updateTime}, </if>
+            <if test="updateUser != null"> update_user = #{updateUser}, </if>
+        </trim>
+        WHERE user_id = #{userId}
+    </update>
+
+</mapper>
